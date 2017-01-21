@@ -1,0 +1,198 @@
+---
+title: "Patel 2014 Human Glioblastoma"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(modules) #devtools::install_github("klmr/modules")
+import_package("Matrix",attach=TRUE)
+import_package("ggplot2",attach=TRUE)
+biobase<-import_package("Biobase")
+biomart<-import_package("biomaRt")
+summarizedexperiment<-import_package("SummarizedExperiment")
+geoq<-import_package("GEOquery")
+plyr<-import_package("plyr")
+sqldf<-import_package("sqldf")
+stringr<-import_package("stringr")
+datasbl<-import("../util/data_assemble")
+prs<-import("../util/txtparse")
+```
+
+#### Overview 
+This is the code to produce a *SummarizedExperiment* object of the glioblastoma RNA-Seq experiment by Patel et al. (2014) and GEO accession [GSE57872](http://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE57872). 
+
+#### Citation 
+Citation: Patel AP, Tirosh I, Trombetta JJ, Shalek AK et al. Single-cell RNA-seq highlights intratumoral heterogeneity in primary glioblastoma. Science 2014 Jun 20;344(6190):1396-401. PMID: 24925914
+
+#### Description extracted from GEO: 
+We report transcriptomes from 430 single glioblastoma cells isolated from 5 individual tumors and 102 single cells from gliomasphere cells lines generated using SMART-seq. In addition, we report population RNA-seq from the five tumors as well as RNA-seq from cell lines derived from 3 tumors (MGH26, MGH28, MGH31) cultured under serum free (GSC) and differentiated (DGC) conditions. This dataset highlights intratumoral heterogeneity with regards to the expression of de novo derived transcriptional modules and established subtype classifiers.
+
+# Obtaining sample information from GEO
+The following code chunk obtains the sample information from the series matrix file downloaded from GEO. The columns are then parsed and new columns with shorter names and factor levels are added.
+
+```{r, eval=FALSE}
+#may be able to also use this to get TPM/FPKM from study?
+gse <- geoq$getGEO("GSE57872")
+gse <- gse[[1]]
+pdata <- biobase$pData(gse)
+#each row is a sample (cell), each column is some phenotype attribute
+dir.create("extdata")
+write.table(pdata, file="extdata/pData.txt")
+```
+
+Create phenotypic dataset
+```{r}
+pdata <- read.table("extdata/pData.txt")
+pd <- pdata[, c("title", "geo_accession", "source_name_ch1", grep("characteristics",names(pdata), value = TRUE), "description")]
+names(pd) <- c("sampleName", "geo_accession", "sampleType", "tumorName", "cellType", "subType", "includeSample")
+pd$sampleName <- unlist(lapply(stringr$str_split(as.character(pd$sampleName),"_",n=2), function(x) x[2]))
+pd$sampleType <- ifelse(grepl("Population", pd$sampleType), "bulk", "SC")
+pd$tumorName <- ifelse(grepl("cell line: ", pd$tumorName), sub("cell line: (.*)", "\\1", pd$tumorName), sub("patient id: (.*)", "\\1", pd$tumorName))
+pd$cellType <- as.factor(sub("cell type: (.*)", "\\1", pd$cellType))
+pd$subType <- as.factor(sub("subtype: (.*)", "\\1", pd$subType))
+pd$subType[which(pd$subType == "")] <- NA
+pd$includeSample <- ifelse(pd$includeSample == "Please note that this sample did not pass the quality control filtering (described in the data processing field), thus was excluded from further data processing", FALSE, TRUE)
+#Only 430 cells were actually included by the authors
+table(pd[!pd$tumorName %in% c("CSC6","CSC8") & pd$sampleType=="SC","includeSample"])
+head(pd)
+```
+
+The information which connects the sample information from GEO with the SRA run id is downloaded from [SRA](http://www.ncbi.nlm.nih.gov/sra/?term=SRP042161) using the **Send to: File button**. Add the SRP ID to the end of the csv file name. 
+
+```{r}
+srp <- read.csv("extdata/SraRunInfo_SRP042161.csv")
+dim(srp)
+table(srp$LibraryLayout) #everything is paired-end
+
+srpsmall <- srp[,c("SampleName", "Run","avgLength","Experiment","Sample","BioSample", "download_path")]
+colnames(srpsmall)[1] <- "geo_accession"
+coldata <- merge(pd, srpsmall, by ="geo_accession")
+rownames(coldata) <- coldata$Run
+head(coldata)
+```
+
+```{r, eval=FALSE}
+# The sample table was saved to a CSV file for future reference. This file is included in the inst/extdata directory. The second file will be used to extract all the SRA files from NCBI. 
+write.csv(coldata, file="extdata/sample_table_fqHeader.csv")
+write.table(coldata$Run, file = "extdata/sraFiles.txt", quote= FALSE,row.names = FALSE, col.names = FALSE)
+write.table(coldata$download_path, file="extdata/sraFilesPath.txt", quote= FALSE,row.names = FALSE, col.names = FALSE)
+save(coldata, file="extdata/coldata.RData") #doesn't have batch info yet!!!
+```
+
+```{r}
+# Number of samples split by tumor name, sample type and cell type
+with(coldata[which(coldata$includeSample==TRUE),],table(sampleType, tumorName, cellType))
+```
+
+# Downloading FASTQ files from SRA
+
+#### Downloading individual `.sra` files
+```{r,eval=FALSE}
+#practice with only one SRA file
+wget -P data/original/sra http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294493
+```
+
+Downloading all `.sra` files in the `sraFilesPath.txt`. This is also done by the *sra_download.lsf* script.
+
+```{r, engine="bash",eval=FALSE}
+# wget -i extdata/sraFilesPath.txt -P data/original/sra
+bsub -q normal < ../util/sra_download.lsf
+```
+
+#### Extracting `.fastq` files
+
+A file containing the SRA run numbers was created: `sraFiles.txt` (see above). This file was used to extract the paired-end `.fastq` files from the `.sra` files using the `fastq-dump` command in the SRA Toolkit. We use the gnu command `parallel` to parallelize this process. We specify the number of threads to send the individual commands to using the parameter `-j` and here we specify 8 threads.
+
+```{r, eval=FALSE}
+#Test command
+#head -n 8 extdata/sraFiles.txt | parallel -j 8 fastq-dump -I --split-files -O data/original/fastq --gzip data/original/sra/{}
+#warning- "parallel" is not the same as "gnu-parallel". The latter is what we need for this command! Probably needs to be installed from www.gnu.org/software/parallel
+cat extdata/sraFiles.txt | parallel -j 16 fastq-dump -I --split-files -O data/original/fastq --gzip data/original/sra/{}
+# for single end data, no need for -I and --split-files
+# these options split into one FASTQ file for each end of the read
+```
+
+#### Checking for batches
+
+```
+mkdir -p summaryStats
+for file in $(find -L data/original/sra -name SRR*);
+do
+  fastq-dump -X 1 -Z $file | grep @SRR >> summaryStats/fastqBatches.txt;
+done
+```
+
+Here is the first line of the raw fastq files to determine if the cells were processed in batches. 
+```{r}
+load("extdata/coldata.RData")
+firstline <- read.table("summaryStats/fastqBatches.txt")
+head(firstline)
+#machine ID: flow cell, etc. in the second column
+```
+After parsing the text in the second column, this is the information in the fastq files.  
+```{r}
+fqInfo<-stringr$str_split(firstline$V2, ":", n=7)
+hdr_ln<-sapply(fqInfo,length)
+fqInfo[hdr_ln != 7]<-NULL
+#SRR1295068 did not have a header, remove
+fqInfo <- plyr$ldply(fqInfo)
+colnames(fqInfo) <- c("instrument", "runID", "fcID", "fcLane", "tile","xtile", "ytile")
+head(fqInfo)
+fqInfo$Run<-stringr$str_sub(firstline$V1[hdr_ln==7], start=2,end=-3)
+coldata<-plyr$join(coldata,fqInfo,by="Run")
+rownames(coldata)<-coldata$Run
+save(coldata,file="extdata/coldata2.RData")
+```
+
+### Pseudoalignment of reads in FASTQ files to Transcriptome using Kallisto
+
+Stephanie originally used STAR for this step but Kallisto is significantly faster. Use the script *kallisto_master.py* to submit the LSF (bsub) jobs to do the alignments. The kallisto output is under `data/original/kallisto_out`. Also of interest is the bsub_out output which has some information relevant for quality control purposes.
+
+0. it might be necessary to clean out the `bsub_out` directory in case there were previous LSF log files. The LSF system only appends to files not overwrite, which can cause confusion for the data loading scripts further along. `rm bsub_out/*`
+1. Run script *../util/kallisto_wrapper_sra.py* to align the reads, for example:
+```
+python ../util/kallisto_wrapper_sra.py data/original/fastq data/original/kallisto_out extdata/SraRunInfo_SRP042161.csv > lsf_log.txt
+```
+2. Execute following command to remove empty directories
+```find data/original/kallisto_out -type d -empty -delete```
+
+### Map tumor names to SRA IDs and merge kallisto output
+
+```{r}
+write.csv(coldata[,c("geo_accession","tumorName")],file="summaryStats/geo_tumor_alias.csv",row.names=FALSE)
+unique(coldata$tumorName)
+```
+Previously we created an "alias" file mapping the SRA run IDs to the tumor names. Use the following python script to create symlinks that include the tumor names in the file name but point to the original SRA identified subfolder of the kallisto output.
+
+`python ../util/geo_alias.py summaryStats/geo_tumor_alias.csv data/original/kallisto_out`
+
+now we can merge all the kallisto output into one file per tumor
+
+`parallel -j 7 python ../util/data_assemble.py -b bsub_out_alias -k data/original/kallisto_out_alias -s {} ::: MGH26 MGH28 MGH29 MGH30 MGH31 CSC6 CSC8`
+
+or for one at a time `python ../util/data_assemble.py -b bsub_out_alias -k data/original/kallisto_out_alias -s MGH30`
+
+### Load Data - all tumors
+
+```{r}
+load("extdata/coldata2.RData") #coldata
+#tumors<-c("MGH26","MGH28","MGH29","MGH30","MGH31","CSC6","CSC8")
+tumors<-unique(coldata$tumorName)
+dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=FALSE)
+m<-dat[["m"]]
+meta<-dat[["meta"]]
+rm(dat)
+coldata$cell_id<-with(coldata,paste(tumorName,geo_accession,sep="_"))
+meta<-plyr$join(meta,coldata,by="cell_id")
+rownames(meta)<-meta$cell_id
+meta<-meta[colnames(m),]
+patel_glio_2014<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),  colData=DataFrame(meta))
+#max(abs(summarizedexperiment$assays(patel_glio_2014)$counts[1:1000,1:10] - m[1:1000,1:10])) #sanity check
+save(patel_glio_2014,file="data/patel2014gliohuman.rda")
+```
+
+# Session information
+
+```{r}
+sessionInfo()
+```
