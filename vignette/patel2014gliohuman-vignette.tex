@@ -1,0 +1,213 @@
+%\VignetteIndexEntry{The bodymapRat data user's guide}
+%\VignettePackage{bodymapRat}
+%\VignetteEngine{knitr::knitr}
+\documentclass{article}\usepackage[]{graphicx}\usepackage[usenames,dvipsnames]{color}
+%% maxwidth is the original width if it is less than linewidth
+%% otherwise use linewidth (to make sure the graphics do not exceed the margin)
+\makeatletter
+\def\maxwidth{ %
+  \ifdim\Gin@nat@width>\linewidth
+    \linewidth
+  \else
+    \Gin@nat@width
+  \fi
+}
+\makeatother
+
+\definecolor{fgcolor}{rgb}{0.345, 0.345, 0.345}
+\newcommand{\hlnum}[1]{\textcolor[rgb]{0.686,0.059,0.569}{#1}}%
+\newcommand{\hlstr}[1]{\textcolor[rgb]{0.192,0.494,0.8}{#1}}%
+\newcommand{\hlcom}[1]{\textcolor[rgb]{0.678,0.584,0.686}{\textit{#1}}}%
+\newcommand{\hlopt}[1]{\textcolor[rgb]{0,0,0}{#1}}%
+\newcommand{\hlstd}[1]{\textcolor[rgb]{0.345,0.345,0.345}{#1}}%
+\newcommand{\hlkwa}[1]{\textcolor[rgb]{0.161,0.373,0.58}{\textbf{#1}}}%
+\newcommand{\hlkwb}[1]{\textcolor[rgb]{0.69,0.353,0.396}{#1}}%
+\newcommand{\hlkwc}[1]{\textcolor[rgb]{0.333,0.667,0.333}{#1}}%
+\newcommand{\hlkwd}[1]{\textcolor[rgb]{0.737,0.353,0.396}{\textbf{#1}}}%
+\let\hlipl\hlkwb
+
+\usepackage{framed}
+\makeatletter
+\newenvironment{kframe}{%
+ \def\at@end@of@kframe{}%
+ \ifinner\ifhmode%
+  \def\at@end@of@kframe{\end{minipage}}%
+  \begin{minipage}{\columnwidth}%
+ \fi\fi%
+ \def\FrameCommand##1{\hskip\@totalleftmargin \hskip-\fboxsep
+ \colorbox{shadecolor}{##1}\hskip-\fboxsep
+     % There is no \\@totalrightmargin, so:
+     \hskip-\linewidth \hskip-\@totalleftmargin \hskip\columnwidth}%
+ \MakeFramed {\advance\hsize-\width
+   \@totalleftmargin\z@ \linewidth\hsize
+   \@setminipage}}%
+ {\par\unskip\endMakeFramed%
+ \at@end@of@kframe}
+\makeatother
+
+\definecolor{shadecolor}{rgb}{.97, .97, .97}
+\definecolor{messagecolor}{rgb}{0, 0, 0}
+\definecolor{warningcolor}{rgb}{1, 0, 1}
+\definecolor{errorcolor}{rgb}{1, 0, 0}
+\newenvironment{knitrout}{}{} % an empty environment to be redefined in TeX
+
+\usepackage{alltt}
+
+\RequirePackage{/Library/Frameworks/R.framework/Versions/3.3/Resources/library/BiocStyle/resources/tex/Bioconductor}
+
+\AtBeginDocument{\bibliographystyle{/Library/Frameworks/R.framework/Versions/3.3/Resources/library/BiocStyle/resources/tex/unsrturl}}
+
+
+\setlength{\parskip}{1\baselineskip}
+\setlength{\parindent}{0pt}
+
+\title{The \texttt{patel2014gliohuman} data user's guide}
+\author{Will Townes (\texttt{will.townes@gmail.com}) \and 
+Stephanie C. Hicks (\texttt{shicks@jimmy.harvard.edu}) }
+
+\date{Modified: January 23, 2017.  Compiled: \today}
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\begin{document}
+
+\maketitle
+
+\section{Overview}
+
+The \texttt{patel2014gliohuman} package contains gene expression data on 875 
+RNA-Seq samples from a study investigating tumor heterogeneity 
+in five primary glioblastoma tumors [Patel et al. (2014)]. 
+This study includes both single-cell RNA-Seq samples and 
+bulk RNA-Seq samples from tumors and cells lines. Metadata was obtained from 
+Gene Expression Omnibus (GSE57872) and raw FASTQ files were 
+downloaded from Sequence Read Archive. The metadata includes the sequence
+identifier information provided in the header of the FASTQ files which can be used
+as a surrogate for batch. All samples were processed using Kallisto 
+for gene expression quantification. The data provided are the 
+estimated counts for ENSEMBL genes for all samples, not just the 
+ones that were included in the authors' analysis. 
+These samples have not been normalized or pre-processed. 
+The data are provided as an \texttt{SummarizedExperiment}. 
+
+The data can be accessed as follows:
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{library}\hlstd{(SummarizedExperiment)}
+\hlkwd{library}\hlstd{(patel2014gliohuman)}
+\end{alltt}
+\end{kframe}
+\end{knitrout}
+
+\begin{knitrout}
+\definecolor{shadecolor}{rgb}{0.969, 0.969, 0.969}\color{fgcolor}\begin{kframe}
+\begin{alltt}
+\hlkwd{data}\hlstd{(patel2014gliohuman)}
+
+\hlcom{# Get the expression data}
+\hlstd{counts} \hlkwb{=} \hlkwd{assay}\hlstd{(patel_glio_2014)}
+\end{alltt}
+
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# Loading required package: Matrix}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# \\\#\# Attaching package: 'Matrix'}}
+
+{\ttfamily\noindent\itshape\color{messagecolor}{\#\# The following object is masked from 'package:S4Vectors':\\\#\# \\\#\#\ \ \ \  expand}}\begin{alltt}
+\hlstd{counts[}\hlnum{1}\hlopt{:}\hlnum{5}\hlstd{,} \hlnum{1}\hlopt{:}\hlnum{5}\hlstd{]}
+\end{alltt}
+\begin{verbatim}
+## 5 x 5 sparse Matrix of class "dgCMatrix"
+##                 MGH26_GSM1395399 MGH26_GSM1395400 MGH26_GSM1395401 MGH26_GSM1395402
+## ENSG00000000003          1.10909          1.36451         233.6146          1.00000
+## ENSG00000000005          .                .                 .               .      
+## ENSG00000000419         50.03170          1.00000          52.0000          .      
+## ENSG00000000457          .                1.06708           .               .      
+## ENSG00000000460          1.00000        277.14584           .               2.55005
+##                 MGH26_GSM1395403
+## ENSG00000000003              654
+## ENSG00000000005                .
+## ENSG00000000419                .
+## ENSG00000000457                .
+## ENSG00000000460                .
+\end{verbatim}
+\begin{alltt}
+\hlkwd{dim}\hlstd{(counts)}
+\end{alltt}
+\begin{verbatim}
+## [1] 36579   875
+\end{verbatim}
+\begin{alltt}
+\hlcom{# Get the pheno data}
+\hlstd{pdata} \hlkwb{=} \hlkwd{colData}\hlstd{(patel_glio_2014)}
+\hlkwd{head}\hlstd{(pdata)}
+\end{alltt}
+\begin{verbatim}
+## DataFrame with 6 rows and 27 columns
+##                              cell total_reads aligned_reads   sample          cell_id
+##                          <factor>   <integer>     <integer> <factor>         <factor>
+## MGH26_GSM1395399 MGH26_GSM1395399     3186452        409686    MGH26 MGH26_GSM1395399
+## MGH26_GSM1395400 MGH26_GSM1395400     2141457        282986    MGH26 MGH26_GSM1395400
+## MGH26_GSM1395401 MGH26_GSM1395401     2872050        279391    MGH26 MGH26_GSM1395401
+## MGH26_GSM1395402 MGH26_GSM1395402     2340059         88594    MGH26 MGH26_GSM1395402
+## MGH26_GSM1395403 MGH26_GSM1395403     3678419       1027176    MGH26 MGH26_GSM1395403
+## MGH26_GSM1395404 MGH26_GSM1395404     3022848       1234108    MGH26 MGH26_GSM1395404
+##                  pct_aligned detection        Run geo_accession  sampleName  sampleType
+##                    <numeric> <integer>   <factor>      <factor> <character> <character>
+## MGH26_GSM1395399  0.12857121      3662 SRR1294492    GSM1395399   MGH26_A01          SC
+## MGH26_GSM1395400  0.13214648      5471 SRR1294493    GSM1395400   MGH26_A02          SC
+## MGH26_GSM1395401  0.09727930      5134 SRR1294494    GSM1395401   MGH26_A03          SC
+## MGH26_GSM1395402  0.03785973      2393 SRR1294495    GSM1395402   MGH26_A04          SC
+## MGH26_GSM1395403  0.27924388      4981 SRR1294496    GSM1395403   MGH26_A05          SC
+## MGH26_GSM1395404  0.40826002      4341 SRR1294497    GSM1395404   MGH26_A06          SC
+##                    tumorName     cellType  subType includeSample avgLength Experiment
+##                  <character>     <factor> <factor>     <logical> <integer>   <factor>
+## MGH26_GSM1395399       MGH26 Glioblastoma       NA         FALSE        50  SRX549106
+## MGH26_GSM1395400       MGH26 Glioblastoma      Pro          TRUE        50  SRX549107
+## MGH26_GSM1395401       MGH26 Glioblastoma  Pro+Cla          TRUE        50  SRX549108
+## MGH26_GSM1395402       MGH26 Glioblastoma       NA         FALSE        50  SRX549109
+## MGH26_GSM1395403       MGH26 Glioblastoma  Pro+Cla          TRUE        50  SRX549110
+## MGH26_GSM1395404       MGH26 Glioblastoma       NA         FALSE        50  SRX549111
+##                     Sample    BioSample
+##                   <factor>     <factor>
+## MGH26_GSM1395399 SRS617086 SAMN02796848
+## MGH26_GSM1395400 SRS617087 SAMN02796844
+## MGH26_GSM1395401 SRS617088 SAMN02796850
+## MGH26_GSM1395402 SRS617089 SAMN02796851
+## MGH26_GSM1395403 SRS617090 SAMN02796849
+## MGH26_GSM1395404 SRS617112 SAMN02796854
+##                                                           download_path  instrument
+##                                                                <factor> <character>
+## MGH26_GSM1395399 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294492  GLPB22-B5C
+## MGH26_GSM1395400 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294493  GLPB22-B5C
+## MGH26_GSM1395401 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294494  GLPB22-B5C
+## MGH26_GSM1395402 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294495  GLPB22-B5C
+## MGH26_GSM1395403 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294496  GLPB22-B5C
+## MGH26_GSM1395404 http://sra-download.ncbi.nlm.nih.gov/srapub/SRR1294497  GLPB22-B5C
+##                        runID        fcID      fcLane        tile       xtile       ytile
+##                  <character> <character> <character> <character> <character> <character>
+## MGH26_GSM1395399         556   H0PFYADXX           1        1101        1445        2150
+## MGH26_GSM1395400         556   H0PFYADXX           1        1101        1007        2100
+## MGH26_GSM1395401         556   H0PFYADXX           1        1101        2230        2191
+## MGH26_GSM1395402         556   H0PFYADXX           1        1101        1169        2225
+## MGH26_GSM1395403         556   H0PFYADXX           1        1101        1632        2094
+## MGH26_GSM1395404         556   H0PFYADXX           1        1101        1245        2161
+\end{verbatim}
+\end{kframe}
+\end{knitrout}
+
+\section{References}
+
+\begin{enumerate}
+
+\item Patel et al. (2014). Single-cell RNA-seq highlights 
+intratumoral heterogeneity in primary glioblastoma. 
+\textit{Science} \textbf{344} (6190): 1396 - 1401.
+PMID: 24925914 PMCID: PMC4123637.
+
+
+\end{enumerate}
+
+
+
+
+\end{document}

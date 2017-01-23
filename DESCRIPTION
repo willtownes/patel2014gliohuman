@@ -5,18 +5,20 @@ Version: 0.1.0
 Author: Will Townes and Stephanie Hicks
 Maintainer: Will Townes <will.townes@gmail.com>
 Description: This package contains a Bioconductor "Summarized Experiment"
-  from the Patel et al. (2014) paper that performed single cell RNA-Seq
-  analysis on human glioblastoma tissue. There are also some cell line
-  and bulk RNA-Seq samples included. Metadata was obtained from Gene
-  Expression Omnibus and raw FASTQ files were downloaded from Sequence
-  Read Archive. All samples were quantified using Kallisto. The data
-  provided are the estimated counts for ENSEMBL genes for all samples,
-  not just the ones that were included in the authors' analysis.
-Depends: R (>= 3.2.2)
+    from the Patel et al. (2014) paper that performed single cell RNA-Seq
+    analysis on human glioblastoma tissue. There are also some cell line
+    and bulk RNA-Seq samples included. Metadata was obtained from Gene
+    Expression Omnibus and raw FASTQ files were downloaded from Sequence
+    Read Archive. All samples were quantified using Kallisto. The data
+    provided are the estimated counts for ENSEMBL genes for all samples,
+    not just the ones that were included in the authors' analysis.
+Depends:
+    R (>= 3.2.2)
 Suggests:
-  BiocGenerics,
-  knitr,
-  SummarizedExperiment
+    BiocGenerics,
+    knitr,
+    SummarizedExperiment
 License: GPL (>=3)
 LazyData: TRUE
 VignetteBuilder: knitr
+RoxygenNote: 5.0.1
