@@ -1,6 +1,6 @@
 # patel2014gliohuman
 
-This package contains a Bioconductor "Summarized Experiment"
+This package contains a Bioconductor `Summarized Experiment`
   from the [Patel et al. (2014)](https://doi.org/10.1126/science.1254257) paper that performed single cell RNA-Seq
   analysis on human glioblastoma tissue. There are also some cell line
   and bulk RNA-Seq samples included. Metadata was obtained from Gene
@@ -17,6 +17,23 @@ package **devtools**.
 library(devtools)
 install_github("willtownes/patel2014gliohuman")
 ```
+# Load data
+
+The data is provided as a `SummarizedExperiment` object can be loaded 
+by running the following code in R: 
+
+```r
+library(SummarizedExperiment)
+library(patel2014gliohuman)
+data(patel2014gliohuman)
+
+# Get the expression data
+counts = assay(patel_glio_2014)
+
+# Get the pheno data
+pdata = colData(patel_glio_2014)
+```
+
 # Bug reports
 Report bugs as issues on the [GitHub repository](https://github.com/willtownes/patel2014gliohuman)
 
