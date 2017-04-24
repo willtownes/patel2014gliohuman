@@ -1,2 +1,3 @@
 *.rda binary
 *.RData binary
+*.rds binary

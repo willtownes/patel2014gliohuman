@@ -32,7 +32,7 @@ The following code chunk obtains the sample information from the series matrix f
 
 ```{r, eval=FALSE}
 #may be able to also use this to get TPM/FPKM from study?
-gse <- geoq$getGEO("GSE57872")
+gse <- geoq$getGEO("GSE57872",getGPL=FALSE)
 gse <- gse[[1]]
 pdata <- biobase$pData(gse)
 #each row is a sample (cell), each column is some phenotype attribute
@@ -189,6 +189,21 @@ meta<-meta[colnames(m),]
 patel_glio_2014<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),  colData=DataFrame(meta))
 #max(abs(summarizedexperiment$assays(patel_glio_2014)$counts[1:1000,1:10] - m[1:1000,1:10])) #sanity check
 save(patel_glio_2014,file="data/patel2014gliohuman.rda")
+```
+
+Include TPMs as additional assay
+
+```{r}
+#load("data/patel2014gliohuman.rda")
+load("../../data/patel2014gliohuman.rda")
+pdata<-summarizedexperiment$colData(patel_glio_2014)
+tumors<-unique(pdata$tumorName)
+dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=TRUE)
+tpm<-dat[["m"]]
+counts<-summarizedexperiment$assay(patel_glio_2014,"counts")
+patel_glio_2014_x<-summarizedexperiment$SummarizedExperiment(assays=list(counts=counts,tpm=tpm), colData = pdata)
+saveRDS(patel_glio_2014_x,file="data/patel2014gliohuman.rds")
+#patel_glio_2014_y<-readRDS("../../data/patel2014gliohuman.rds")
 ```
 
 # Session information
