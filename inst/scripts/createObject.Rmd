@@ -186,24 +186,21 @@ coldata$cell_id<-with(coldata,paste(tumorName,geo_accession,sep="_"))
 meta<-plyr$join(meta,coldata,by="cell_id")
 rownames(meta)<-meta$cell_id
 meta<-meta[colnames(m),]
-patel_glio_2014<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),  colData=DataFrame(meta))
+patel_glio_2014_counts<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),  colData=DataFrame(meta))
 #max(abs(summarizedexperiment$assays(patel_glio_2014)$counts[1:1000,1:10] - m[1:1000,1:10])) #sanity check
-save(patel_glio_2014,file="data/patel2014gliohuman.rda")
+save(patel_glio_2014_counts,file="data/patel2014gliohuman_counts.rda")
 ```
 
-Include TPMs as additional assay
+Include TPMs as additional assay. SummarizedExperiment supports multiple assays in a single object, but this results in RDA file >100Mb, which github doesn't allow. So we split TPM into a separate object in its own file.
 
 ```{r}
-#load("data/patel2014gliohuman.rda")
-load("../../data/patel2014gliohuman.rda")
-pdata<-summarizedexperiment$colData(patel_glio_2014)
+#load("data/patel2014gliohuman_counts.rda")
+load("../../data/patel2014gliohuman_counts.rda")
+pdata<-summarizedexperiment$colData(patel_glio_2014_counts)
 tumors<-unique(pdata$tumorName)
-dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=TRUE)
-tpm<-dat[["m"]]
-counts<-summarizedexperiment$assay(patel_glio_2014,"counts")
-patel_glio_2014_x<-summarizedexperiment$SummarizedExperiment(assays=list(counts=counts,tpm=tpm), colData = pdata)
-saveRDS(patel_glio_2014_x,file="data/patel2014gliohuman.rds")
-#patel_glio_2014_y<-readRDS("../../data/patel2014gliohuman.rds")
+tpm_dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=TRUE)
+patel_glio_2014_tpm<-summarizedexperiment$SummarizedExperiment(assays=list(tpm=tpm_dat[["m"]]), colData = pdata)
+save(patel_glio_2014_tpm,file="data/patel2014gliohuman_tpm.rda")
 ```
 
 # Session information
