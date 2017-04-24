@@ -11,7 +11,7 @@
 \setlength{\parindent}{0pt}
 
 \title{The \texttt{patel2014gliohuman} data user's guide}
-\author{Will Townes (\texttt{will.townes@gmail.com}) \and 
+\author{Will Townes (\texttt{will.townes@gmail.com}) \and
 Stephanie C. Hicks (\texttt{shicks@jimmy.harvard.edu}) }
 
 \date{Modified: January 23, 2017.  Compiled: \today}
@@ -23,29 +23,31 @@ Stephanie C. Hicks (\texttt{shicks@jimmy.harvard.edu}) }
 
 \section{Overview}
 
-The \texttt{patel2014gliohuman} package contains gene expression data on 875 
-RNA-Seq samples from a study investigating tumor heterogeneity 
-in five primary glioblastoma tumors [Patel et al. (2014)]. 
-This study includes both single-cell RNA-Seq samples and 
-bulk RNA-Seq samples from tumors and cells lines. Metadata was obtained from 
-Gene Expression Omnibus (GSE57872) and raw FASTQ files were 
+The \texttt{patel2014gliohuman} package contains gene expression data on 875
+RNA-Seq samples from a study investigating tumor heterogeneity
+in five primary glioblastoma tumors [Patel et al. (2014)].
+This study includes both single-cell RNA-Seq samples and
+bulk RNA-Seq samples from tumors and cells lines. Metadata was obtained from
+Gene Expression Omnibus (GSE57872) and raw FASTQ files were
 downloaded from Sequence Read Archive. The metadata includes the sequence
 identifier information provided in the header of the FASTQ files which can be used
-as a surrogate for batch. All samples were processed using Kallisto 
-for gene expression quantification. The data provided are the 
-estimated counts for ENSEMBL genes for all samples, not just the 
-ones that were included in the authors' analysis. 
-These samples have not been normalized or pre-processed. 
-The data are provided as an \texttt{SummarizedExperiment}. 
+as a surrogate for batch. All samples were processed using Kallisto
+for gene expression quantification. The data provided are the
+estimated counts for ENSEMBL genes for all samples, not just the
+ones that were included in the authors' analysis.
+These samples have not been normalized or pre-processed.
+The data are provided as an \texttt{SummarizedExperiment}.
 
 The data can be accessed as follows:
 <<loadlibs, message=FALSE, warning=FALSE>>=
 library(SummarizedExperiment)
+library(Matrix)
 library(patel2014gliohuman)
 @
 
 <<loaddata>>=
-data(patel2014gliohuman)
+data(patel2014gliohuman_counts) #object name: patel_glio_2014
+data(patel2014gliohuman_tpm) #object name: patel_glio_2014_tpm
 
 # Get the expression data
 counts = assay(patel_glio_2014)
@@ -55,14 +57,18 @@ dim(counts)
 # Get the pheno data
 pdata = colData(patel_glio_2014)
 head(pdata)
+
+# Show TPMs are normalized to 1e6
+hist(colSums(assay(patel_glio_2014_tpm)),xlab="column sums",main="TPM")
+hist(colSums(assay(patel_glio_2014)),xlab="column sums",main="Raw Counts")
 @
 
 \section{References}
 
 \begin{enumerate}
 
-\item Patel et al. (2014). Single-cell RNA-seq highlights 
-intratumoral heterogeneity in primary glioblastoma. 
+\item Patel et al. (2014). Single-cell RNA-seq highlights
+intratumoral heterogeneity in primary glioblastoma.
 \textit{Science} \textbf{344} (6190): 1396 - 1401.
 PMID: 24925914 PMCID: PMC4123637.
 
