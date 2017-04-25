@@ -1,0 +1,80 @@
+---
+title: "The patel2014gliohuman data user's guide"
+author: "Will Townes (will.townes@gmail.com) and Stephanie C. Hicks (shicks@jimmy.harvard.edu)" 
+date: "April 25, 2017"
+output: 
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Overview
+
+The `patel2014gliohuman` package contains gene expression data on 875
+RNA-Seq samples from a study investigating tumor heterogeneity
+in five primary glioblastoma tumors in the study
+[Patel et al. (2014)](http://science.sciencemag.org/content/344/6190/1396).
+This study includes both single-cell RNA-Seq samples and
+bulk RNA-Seq samples from tumors and cells lines. Metadata was obtained from
+Gene Expression Omnibus (GSE57872) and raw FASTQ files were
+downloaded from Sequence Read Archive. The metadata includes the sequence
+identifier information provided in the header of the FASTQ files which can be used
+as a surrogate for batch. All samples were processed using Kallisto
+for gene expression quantification. The data provided are the
+estimated counts for ENSEMBL genes for all samples, not just the
+ones that were included in the authors' analysis.
+There are two `SummarizedExperiment` objects:
+(1) estimated counts from Kallisto and (2) TPMs from Kallisto. 
+
+The data can be accessed as follows:
+```{r loadlibs, message=FALSE, warning=FALSE}
+library(SummarizedExperiment)
+library(patel2014gliohuman)
+```
+
+```{r loaddata}
+data(patel2014gliohuman_counts) # object name: patel_glio_2014
+data(patel2014gliohuman_tpm) # object name: patel_glio_2014_tpm
+```
+
+# Get expression data 
+
+## Get the expression data in the form of counts
+```{r counts} 
+patel_counts = as.data.frame(as.matrix(assay(patel_glio_2014)))
+patel_counts[1:5, 1:5]
+dim(patel_counts)
+```
+
+## Get the expression data in the form of TPMs
+```{r tpms}
+patel_tpm = as.data.frame(as.matrix(assay(patel_glio_2014_tpm)))
+patel_tpm[1:5, 1:5]
+dim(patel_tpm)
+```
+
+Show TPMs are normalized to 1e6
+```{r} 
+summary(colSums(patel_tpm))
+```
+
+
+# Get the pheno data
+```{r}
+pdata = colData(patel_glio_2014)
+head(pdata)
+```
+
+# References
+
+1. Patel et al. (2014). Single-cell RNA-seq highlights
+intratumoral heterogeneity in primary glioblastoma.
+*Science* **344** (6190): 1396 - 1401.
+PMID: 24925914 PMCID: PMC4123637.
+

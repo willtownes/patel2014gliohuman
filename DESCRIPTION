@@ -10,7 +10,8 @@ Description: This package contains a Bioconductor "Summarized Experiment"
     and bulk RNA-Seq samples included. Metadata was obtained from Gene
     Expression Omnibus and raw FASTQ files were downloaded from Sequence
     Read Archive. All samples were quantified using Kallisto. The data
-    provided are the estimated counts for ENSEMBL genes for all samples,
+    provided are the estimated counts and TPMs 
+    for ENSEMBL genes for all samples,
     not just the ones that were included in the authors' analysis.
 Depends:
     R (>= 3.2.2)
@@ -21,4 +22,4 @@ Suggests:
 License: GPL (>=3)
 LazyData: TRUE
 VignetteBuilder: knitr
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1
