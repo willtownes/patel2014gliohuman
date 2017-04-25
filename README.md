@@ -8,6 +8,9 @@ This package contains a Bioconductor `Summarized Experiment`
   Read Archive. All samples were quantified using Kallisto. The data
   provided are the estimated counts for ENSEMBL genes for all samples,
   not just the ones that were included in the authors' analysis.
+  There are two `SummarizedExperiment` objects:
+ (1) estimated counts from Kallisto and (2) TPMs from Kallisto. 
+
 
 # Installation
 
@@ -25,10 +28,14 @@ by running the following code in R:
 ```r
 library(SummarizedExperiment)
 library(patel2014gliohuman)
-data(patel2014gliohuman)
+data(patel2014gliohuman_counts) # object name: patel_glio_2014
+data(patel2014gliohuman_tpm) # object name: patel_glio_2014_tpm
 
-# Get the expression data
-counts = assay(patel_glio_2014)
+# Get the expression data in the form of counts
+patel_counts = as.data.frame(as.matrix(assay(patel_glio_2014)))
+
+# Get the expression data in the form of TPMs
+patel_tpm = as.data.frame(as.matrix(assay(patel_glio_2014_tpm)))
 
 # Get the pheno data
 pdata = colData(patel_glio_2014)
