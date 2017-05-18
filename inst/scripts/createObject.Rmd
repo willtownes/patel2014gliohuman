@@ -32,7 +32,7 @@ The following code chunk obtains the sample information from the series matrix f
 
 ```{r, eval=FALSE}
 #may be able to also use this to get TPM/FPKM from study?
-gse <- geoq$getGEO("GSE57872",getGPL=FALSE)
+gse <- geoq$getGEO("GSE57872")#,getGPL=FALSE)
 gse <- gse[[1]]
 pdata <- biobase$pData(gse)
 #each row is a sample (cell), each column is some phenotype attribute
@@ -57,7 +57,7 @@ table(pd[!pd$tumorName %in% c("CSC6","CSC8") & pd$sampleType=="SC","includeSampl
 head(pd)
 ```
 
-The information which connects the sample information from GEO with the SRA run id is downloaded from [SRA](http://www.ncbi.nlm.nih.gov/sra/?term=SRP042161) using the **Send to: File button**. Add the SRP ID to the end of the csv file name. 
+The information which connects the sample information from GEO with the SRA run id is downloaded from [SRA](http://www.ncbi.nlm.nih.gov/sra/?term=SRP042161) using the **Send to: File button** with the RunInfo format. Add the SRP ID to the end of the csv file name. 
 
 ```{r}
 srp <- read.csv("extdata/SraRunInfo_SRP042161.csv")
@@ -107,6 +107,7 @@ A file containing the SRA run numbers was created: `sraFiles.txt` (see above). T
 #Test command
 #head -n 8 extdata/sraFiles.txt | parallel -j 8 fastq-dump -I --split-files -O data/original/fastq --gzip data/original/sra/{}
 #warning- "parallel" is not the same as "gnu-parallel". The latter is what we need for this command! Probably needs to be installed from www.gnu.org/software/parallel
+#check to see if GNU version with parallel --version
 cat extdata/sraFiles.txt | parallel -j 16 fastq-dump -I --split-files -O data/original/fastq --gzip data/original/sra/{}
 # for single end data, no need for -I and --split-files
 # these options split into one FASTQ file for each end of the read
@@ -201,6 +202,18 @@ tumors<-unique(pdata$tumorName)
 tpm_dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=TRUE)
 patel_glio_2014_tpm<-summarizedexperiment$SummarizedExperiment(assays=list(tpm=tpm_dat[["m"]]), colData = pdata)
 save(patel_glio_2014_tpm,file="data/patel2014gliohuman_tpm.rda")
+```
+
+Update class to SummarizedExperiment instead of SummarizedExperiment0 due to new version of R and bioconductor (2017-May)
+
+```{r}
+load("../../data/patel2014gliohuman_counts.rda")
+class(patel_glio_2014)<-"SummarizedExperiment"
+save(patel_glio_2014,file="../../data/patel2014gliohuman_counts.rda")
+
+load("../../data/patel2014gliohuman_tpm.rda")
+class(patel_glio_2014_tpm)<-"SummarizedExperiment"
+save(patel_glio_2014_tpm,file="../../data/patel2014gliohuman_tpm.rda")
 ```
 
 # Session information
