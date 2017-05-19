@@ -5,7 +5,7 @@
 # Typically one should run data_assemble.py first
 # Primary function to use is load_all_samples
 # Input required is simply the list of batch identifiers, such as: c("tumor1","tumor2")
- 
+
 library(modules)
 import_package("Matrix",attach=TRUE)
 parallel<-import_package("parallel")
@@ -16,7 +16,7 @@ biomaRt<-import_package("biomaRt") #converts transcript ID to gene ID
 
 load_sample<-function(sample_name,transcript2gene_map=NULL,new_cell_id=TRUE,tpm=TRUE,folder="data"){
   #set tpm=FALSE to get counts
-  #if transcript2gene_map is provided, gene-level values returned, 
+  #if transcript2gene_map is provided, gene-level values returned,
   #otherwise, returns transcript-level
   # new_cell_id=TRUE means prepend sample name before cell name to make unique ID
   # new_cell_id=FALSE means use existing cell name as unique ID
@@ -68,12 +68,10 @@ coo2matrix<-function(row_ids,col_ids,vals){
   # creates sparse Matrix
   rows<-factor(row_ids)
   cols<-factor(col_ids)
-  mat <- Matrix(0.0, nrow=nlevels(rows), ncol=nlevels(cols))
+  mat<- sparseMatrix(i=as.integer(rows),j=as.integer(cols),x=vals)
   rownames(mat)<-levels(rows)
   colnames(mat)<-levels(cols)
-  # Notice that you need to specify zero values to make it sparse.
-  mat[cbind(rows,cols)] <- vals
-  return(mat)
+  mat
 }
 
 qc2meta<-function(sample_name,new_cell_id=TRUE,folder="data"){
@@ -91,7 +89,7 @@ qc2meta<-function(sample_name,new_cell_id=TRUE,folder="data"){
 }
 
 load_all_samples<-function(sample_list,new_cell_id=TRUE,transcripts2genes=TRUE,tpm=TRUE,biomart_dataset="hsapiens_gene_ensembl",biomart_cache=TRUE){
-  # provide list of batch identifiers "sample_list" 
+  # provide list of batch identifiers "sample_list"
   # transcripts2genes: flag indicating whether to convert to gene counts from transcript counts input
   # new_cell_id=TRUE means prepend sample name before cell name to make unique ID
   # new_cell_id=FALSE means use existing cell name as unique ID
@@ -111,10 +109,8 @@ load_all_samples<-function(sample_list,new_cell_id=TRUE,transcripts2genes=TRUE,t
     id_map<-NULL
   }
   #computationally expensive step- use parallel to speed up:
-  ncores<-min(length(sample_list),parallel$detectCores())
-  #d<-do.call("rbind",parallel$mclapply(sample_list,function(x){load_sample(x,id_map,new_cell_id=new_cell_id)},mc.cores=ncores))
-  d<-do.call("rbind",parallel$mclapply(sample_list,load_sample,id_map,new_cell_id,tpm,mc.cores=ncores))
-  vals<-if(tpm){ d$tpm }else{ d$est_counts } 
+  d<-do.call("rbind",parallel$mclapply(sample_list,load_sample,id_map,new_cell_id,tpm))
+  vals<-if(tpm){ d$tpm }else{ d$est_counts }
   m<-coo2matrix(d$gene_id,d$cell_id,vals)
   meta<-do.call("rbind",lapply(sample_list,qc2meta,new_cell_id))
   meta$pct_aligned<-with(meta,aligned_reads/total_reads)
