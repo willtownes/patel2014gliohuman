@@ -28,3 +28,13 @@ test_that("coo2matrix has correct dimnames",{
 test_that("coo2matrix gives correct values",{
   expect_equal(as.matrix(A),correct_mat)
 })
+
+
+#### Here is some stuff for translating sqldf query into base R
+library(sqldf)
+
+d<-data.frame(cell_id=sample.int(10,size=50,replace=TRUE),sample=rep(c("A","B"),each=25),gene_id=sample.int(20,size=50,replace=TRUE),est_counts=rpois(50,5))
+
+d_sql<-sqldf("select cell_id,gene_id,sum(est_counts) as est_counts from d group by cell_id,gene_id")
+d_agg<-aggregate(est_counts~gene_id+cell_id,d,sum)
+

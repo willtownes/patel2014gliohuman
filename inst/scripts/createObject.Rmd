@@ -12,7 +12,7 @@ biomart<-import_package("biomaRt")
 summarizedexperiment<-import_package("SummarizedExperiment")
 geoq<-import_package("GEOquery")
 plyr<-import_package("plyr")
-sqldf<-import_package("sqldf")
+#sqldf<-import_package("sqldf")
 stringr<-import_package("stringr")
 datasbl<-import("../util/data_assemble")
 prs<-import("../util/txtparse")
@@ -176,15 +176,6 @@ or for one at a time `python ../util/data_assemble.py -b bsub_out_alias -k data/
 ### Load Data - all tumors
 
 ```{r}
-#debugging weird error
-source("../util/data_assemble.r")
-load("extdata/coldata2.RData") #coldata
-#tumors<-c("MGH26","MGH28","MGH29","MGH30","MGH31","CSC6","CSC8")
-tumors<-unique(coldata$tumorName)
-system.time(dat<-load_all_samples(tumors,new_cell_id=FALSE,tpm=FALSE))
-```
-
-```{r}
 load("extdata/coldata2.RData") #coldata
 #tumors<-c("MGH26","MGH28","MGH29","MGH30","MGH31","CSC6","CSC8")
 tumors<-unique(coldata$tumorName)
@@ -196,33 +187,20 @@ coldata$cell_id<-with(coldata,paste(tumorName,geo_accession,sep="_"))
 meta<-plyr$join(meta,coldata,by="cell_id")
 rownames(meta)<-meta$cell_id
 meta<-meta[colnames(m),]
-patel_glio_2014_counts<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),  colData=DataFrame(meta))
-#max(abs(summarizedexperiment$assays(patel_glio_2014)$counts[1:1000,1:10] - m[1:1000,1:10])) #sanity check
-save(patel_glio_2014_counts,file="data/patel2014gliohuman_counts.rda")
+patel_counts<-summarizedexperiment$SummarizedExperiment(assays=list(counts=m),colData=S4Vectors::DataFrame(meta))
+#max(abs(summarizedexperiment$assays(patel_counts)$counts[1:1000,1:10] - m[1:1000,1:10])) #sanity check
+save(patel_counts,file="../../data/patel_counts.rda")
 ```
 
 Include TPMs as additional assay. SummarizedExperiment supports multiple assays in a single object, but this results in RDA file >100Mb, which github doesn't allow. So we split TPM into a separate object in its own file.
 
 ```{r}
-#load("data/patel2014gliohuman_counts.rda")
-load("../../data/patel2014gliohuman_counts.rda")
-pdata<-summarizedexperiment$colData(patel_glio_2014_counts)
+load("../../data/patel_counts.rda")
+pdata<-summarizedexperiment$colData(patel_counts)
 tumors<-unique(pdata$tumorName)
 tpm_dat<-datasbl$load_all_samples(tumors,new_cell_id=FALSE,tpm=TRUE)
-patel_glio_2014_tpm<-summarizedexperiment$SummarizedExperiment(assays=list(tpm=tpm_dat[["m"]]), colData = pdata)
-save(patel_glio_2014_tpm,file="data/patel2014gliohuman_tpm.rda")
-```
-
-Update class to SummarizedExperiment instead of SummarizedExperiment0 due to new version of R and bioconductor (2017-May)
-
-```{r}
-load("../../data/patel2014gliohuman_counts.rda")
-class(patel_glio_2014)<-"SummarizedExperiment"
-save(patel_glio_2014,file="../../data/patel2014gliohuman_counts.rda")
-
-load("../../data/patel2014gliohuman_tpm.rda")
-class(patel_glio_2014_tpm)<-"SummarizedExperiment"
-save(patel_glio_2014_tpm,file="../../data/patel2014gliohuman_tpm.rda")
+patel_tpm<-summarizedexperiment$SummarizedExperiment(assays=list(tpm=tpm_dat[["m"]]), colData = pdata)
+save(patel_tpm,file="../../data/patel_tpm.rda")
 ```
 
 # Session information

@@ -9,7 +9,7 @@
 library(modules)
 import_package("Matrix",attach=TRUE)
 parallel<-import_package("parallel")
-sqldf<-import_package("sqldf")
+#sqldf<-import_package("sqldf")
 plyr<-import_package("plyr")
 biomaRt<-import_package("biomaRt") #converts transcript ID to gene ID
 #fns<-import("../util/functions")
@@ -25,7 +25,6 @@ load_sample<-function(sample_name,transcript2gene_map=NULL,new_cell_id=TRUE,tpm=
   #second column contains corresponding gene IDs
   f<-file.path(folder,sample_name,"abundance_combined.csv")
   d<-read.csv(f)
-  d$sample<-factor(rep(sample_name,nrow(d)))
   d$length<-NULL #save memory space
   d$eff_length<-NULL
   if(new_cell_id==TRUE){
@@ -56,10 +55,13 @@ load_sample<-function(sample_name,transcript2gene_map=NULL,new_cell_id=TRUE,tpm=
   #note ddply is too slow, so use tapply or sqldf instead
   if(tpm==FALSE){
     #d<-ddply(d,c("cell_id","gene_id"),summarise,est_counts=sum(est_counts))
-    d<-sqldf$sqldf("select cell_id,sample,gene_id,sum(est_counts) as est_counts from d group by cell_id,gene_id")
+    #d<-sqldf$sqldf("select cell_id,gene_id,sum(est_counts) as est_counts from d group by cell_id,gene_id")
+    d<-aggregate(est_counts~cell_id+gene_id,d,sum)
   } else {
-    d<-sqldf$sqldf("select cell_id,sample,gene_id,sum(tpm) as tpm from d group by cell_id,gene_id")
+    #d<-sqldf$sqldf("select cell_id,gene_id,sum(tpm) as tpm from d group by cell_id,gene_id")
+    d<-aggregate(tpm~cell_id+gene_id,d,sum)
   }
+  d$sample<-factor(rep(sample_name,nrow(d)))
   return(d)
 }
 
