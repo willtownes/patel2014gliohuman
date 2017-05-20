@@ -176,6 +176,15 @@ or for one at a time `python ../util/data_assemble.py -b bsub_out_alias -k data/
 ### Load Data - all tumors
 
 ```{r}
+#debugging weird error
+source("../util/data_assemble.r")
+load("extdata/coldata2.RData") #coldata
+#tumors<-c("MGH26","MGH28","MGH29","MGH30","MGH31","CSC6","CSC8")
+tumors<-unique(coldata$tumorName)
+system.time(dat<-load_all_samples(tumors,new_cell_id=FALSE,tpm=FALSE))
+```
+
+```{r}
 load("extdata/coldata2.RData") #coldata
 #tumors<-c("MGH26","MGH28","MGH29","MGH30","MGH31","CSC6","CSC8")
 tumors<-unique(coldata$tumorName)
