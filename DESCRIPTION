@@ -1,7 +1,7 @@
 Package: patel2014gliohuman
 Type: Package
 Title: Patel 2014 Human Glioblastoma Data
-Version: 0.1.0
+Version: 0.2.0
 Author: Will Townes and Stephanie Hicks
 Maintainer: Will Townes <will.townes@gmail.com>
 Description: This package contains a Bioconductor "Summarized Experiment"
@@ -14,10 +14,11 @@ Description: This package contains a Bioconductor "Summarized Experiment"
     for ENSEMBL genes for all samples,
     not just the ones that were included in the authors' analysis.
 Depends:
-    R (>= 3.2.2)
+    R (>= 3.4.0)
 Suggests:
     BiocGenerics,
     knitr,
+    Matrix,
     SummarizedExperiment
 License: GPL (>=3)
 LazyData: TRUE

@@ -1,7 +1,7 @@
 ---
 title: "The patel2014gliohuman data user's guide"
 author: "Will Townes (will.townes@gmail.com) and Stephanie C. Hicks (shicks@jimmy.harvard.edu)" 
-date: "April 25, 2017"
+date: "May 19, 2017"
 output: 
   BiocStyle::html_document
 vignette: >
@@ -25,36 +25,46 @@ bulk RNA-Seq samples from tumors and cells lines. Metadata was obtained from
 Gene Expression Omnibus (GSE57872) and raw FASTQ files were
 downloaded from Sequence Read Archive. The metadata includes the sequence
 identifier information provided in the header of the FASTQ files which can be used
-as a surrogate for batch. All samples were processed using Kallisto
+as a surrogate for batch. All samples were processed using [Kallisto](https://pachterlab.github.io/kallisto/about.html)
 for gene expression quantification. The data provided are the
 estimated counts for ENSEMBL genes for all samples, not just the
 ones that were included in the authors' analysis.
 There are two `SummarizedExperiment` objects:
 (1) estimated counts from Kallisto and (2) TPMs from Kallisto. 
 
+Note that the assays are sparse Matrix objects, which is memory efficient due to large numbers of zeros.
+
 The data can be accessed as follows:
+
 ```{r loadlibs, message=FALSE, warning=FALSE}
 library(SummarizedExperiment)
 library(patel2014gliohuman)
 ```
 
 ```{r loaddata}
-data(patel2014gliohuman_counts) # object name: patel_glio_2014
-data(patel2014gliohuman_tpm) # object name: patel_glio_2014_tpm
+data(patel_counts)
+data(patel_tpm)
+```
+
+# Get the pheno data
+
+```{r}
+pdata = colData(patel_counts) #same pdata for patel_tpm
+head(pdata)
 ```
 
 # Get expression data 
 
 ## Get the expression data in the form of counts
 ```{r counts} 
-patel_counts = as.data.frame(as.matrix(assay(patel_glio_2014)))
+patel_counts = as.data.frame(as.matrix(assay(patel_counts)))
 patel_counts[1:5, 1:5]
 dim(patel_counts)
 ```
 
 ## Get the expression data in the form of TPMs
 ```{r tpms}
-patel_tpm = as.data.frame(as.matrix(assay(patel_glio_2014_tpm)))
+patel_tpm = as.data.frame(as.matrix(assay(patel_tpm)))
 patel_tpm[1:5, 1:5]
 dim(patel_tpm)
 ```
@@ -64,17 +74,9 @@ Show TPMs are normalized to 1e6
 summary(colSums(patel_tpm))
 ```
 
-
-# Get the pheno data
-```{r}
-pdata = colData(patel_glio_2014)
-head(pdata)
-```
-
 # References
 
 1. Patel et al. (2014). Single-cell RNA-seq highlights
 intratumoral heterogeneity in primary glioblastoma.
 *Science* **344** (6190): 1396 - 1401.
 PMID: 24925914 PMCID: PMC4123637.
-

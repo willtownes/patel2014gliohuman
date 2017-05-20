@@ -23,22 +23,22 @@ install_github("willtownes/patel2014gliohuman")
 # Load data
 
 The data is provided as a `SummarizedExperiment` object can be loaded 
-by running the following code in R: 
+by running the following code in R. Note that the assays are sparse Matrix objects, which is memory efficient due to large numbers of zeros.
 
 ```r
 library(SummarizedExperiment)
 library(patel2014gliohuman)
-data(patel2014gliohuman_counts) # object name: patel_glio_2014
-data(patel2014gliohuman_tpm) # object name: patel_glio_2014_tpm
+data(patel_counts)
+data(patel_tpm) 
+
+# Get the pheno data (same for counts and TPM)
+pdata = colData(patel_counts)
 
 # Get the expression data in the form of counts
-patel_counts = as.data.frame(as.matrix(assay(patel_glio_2014)))
+patel_counts = as.data.frame(as.matrix(assay(patel_counts)))
 
 # Get the expression data in the form of TPMs
-patel_tpm = as.data.frame(as.matrix(assay(patel_glio_2014_tpm)))
-
-# Get the pheno data
-pdata = colData(patel_glio_2014)
+patel_tpm = as.data.frame(as.matrix(assay(patel_tpm)))
 ```
 
 # Bug reports
